@@ -400,129 +400,132 @@ escolheropcoes:
           /* INÍCIO DO NOVO CÓDIGO DE VERIFICAÇÃO DE DESINSTALAÇÕES */
           echo $bold . $azul . "[+] Verificando desinstalações recentes e acessos a gerenciadores de arquivos...\n";
 
-          // Lista de gerenciadores de arquivos para verificar
-          $gerenciadoresArquivos = array(
-              'ru.zdevs.zarchiver',                 // ZArchiver
-              'ru.zdevs.zarchiverpro',              // ZArchiver Pro
-              'com.rarlab.rar',                     // RAR
-              'com.estrongs.android.pop',           // ES File Explorer
-              'com.google.android.apps.nbu.files',  // Files by Google
-              'com.ghisler.android.TotalCommander', // Total Commander
-              'pl.solidexplorer2',                  // Solid Explorer
-              'com.mixplorer',                      // MiXplorer
-              'com.sec.android.app.myfiles'         // Samsung My Files
-          );
+// Lista de gerenciadores de arquivos para verificar
+$gerenciadoresArquivos = array(
+    'ru.zdevs.zarchiver',                 // ZArchiver
+    'ru.zdevs.zarchiverpro',              // ZArchiver Pro
+    'com.rarlab.rar',                     // RAR
+    'com.estrongs.android.pop',           // ES File Explorer
+    'com.google.android.apps.nbu.files',  // Files by Google
+    'com.ghisler.android.TotalCommander', // Total Commander
+    'pl.solidexplorer2',                  // Solid Explorer
+    'com.mixplorer',                      // MiXplorer
+    'com.sec.android.app.myfiles'         // Samsung My Files
+);
 
-          // Verificar acessos recentes a gerenciadores de arquivos
-          $gerenciadoresAcessados = 0;
-          foreach ($gerenciadoresArquivos as $pacote) {
-              $comandoVerificarInstalado = 'adb shell pm list packages | grep "' . $pacote . '"';
-              $resultadoVerificarInstalado = trim(shell_exec($comandoVerificarInstalado));
-              
-              if (!empty($resultadoVerificarInstalado)) {
-                  $comandoUltimoAcesso = 'adb shell "dumpsys usagestats | grep -A 5 ' . $pacote . ' | grep lastTimeUsed"';
-                  $resultadoUltimoAcesso = trim(shell_exec($comandoUltimoAcesso));
-                  
-                  if (!empty($resultadoUltimoAcesso)) {
-                      preg_match('/lastTimeUsed=(\d+)/', $resultadoUltimoAcesso, $matches);
-                      
-                      if (!empty($matches[1])) {
-                          $timestampUltimoAcesso = $matches[1] / 1000;
-                          $dataUltimoAcesso = date("d-m-Y H:i:s", $timestampUltimoAcesso);
-                          $diferencaHoras = round((time() - $timestampUltimoAcesso) / 3600, 1);
-                          
-                          $nomeAmigavel = "";
-                          if (strpos($pacote, "zarchiver") !== false) $nomeAmigavel = "ZARCHIVER";
-                          else if (strpos($pacote, "estrongs") !== false) $nomeAmigavel = "ES FILE EXPLORER";
-                          else if (strpos($pacote, "rar") !== false) $nomeAmigavel = "WINRAR";
-                          else if (strpos($pacote, "TotalCommander") !== false) $nomeAmigavel = "TOTAL COMMANDER";
-                          else if (strpos($pacote, "solidexplorer") !== false) $nomeAmigavel = "SOLID EXPLORER";
-                          else if (strpos($pacote, "mixplorer") !== false) $nomeAmigavel = "MIXPLORER";
-                          else if (strpos($pacote, "myfiles") !== false) $nomeAmigavel = "SAMSUNG MY FILES";
-                          else $nomeAmigavel = $pacote;
-                          
-                          if ($diferencaHoras < 2) {
-                              echo $bold . $vermelho . "[!] " . strtoupper($nomeAmigavel) . " ACESSADO: " . $dataUltimoAcesso . "\n";
-                              $gerenciadoresAcessados++;
-                          } else {
-                              echo $bold . $amarelo . "[*] " . strtoupper($nomeAmigavel) . " - último acesso: " . $dataUltimoAcesso . "\n";
-                          }
-                      }
-                  }
-              }
-          }
+// Verificar acessos recentes a gerenciadores de arquivos
+$gerenciadoresAcessados = 0;
+foreach ($gerenciadoresArquivos as $pacote) {
+    $comandoVerificarInstalado = 'adb shell pm list packages | grep "' . $pacote . '"';
+    $resultadoVerificarInstalado = shell_exec($comandoVerificarInstalado);
+    $resultadoVerificarInstalado = is_null($resultadoVerificarInstalado) ? "" : trim($resultadoVerificarInstalado);
+    
+    if (!empty($resultadoVerificarInstalado)) {
+        $comandoUltimoAcesso = 'adb shell "dumpsys usagestats | grep -A 5 ' . $pacote . ' | grep lastTimeUsed"';
+        $resultadoUltimoAcesso = shell_exec($comandoUltimoAcesso);
+        $resultadoUltimoAcesso = is_null($resultadoUltimoAcesso) ? "" : trim($resultadoUltimoAcesso);
+        
+        if (!empty($resultadoUltimoAcesso)) {
+            preg_match('/lastTimeUsed=(\d+)/', $resultadoUltimoAcesso, $matches);
+            
+            if (!empty($matches[1])) {
+                $timestampUltimoAcesso = $matches[1] / 1000;
+                $dataUltimoAcesso = date("d-m-Y H:i:s", $timestampUltimoAcesso);
+                $diferencaHoras = round((time() - $timestampUltimoAcesso) / 3600, 1);
+                
+                $nomeAmigavel = "";
+                if (strpos($pacote, "zarchiver") !== false) $nomeAmigavel = "ZARCHIVER";
+                else if (strpos($pacote, "estrongs") !== false) $nomeAmigavel = "ES FILE EXPLORER";
+                else if (strpos($pacote, "rar") !== false) $nomeAmigavel = "WINRAR";
+                else if (strpos($pacote, "TotalCommander") !== false) $nomeAmigavel = "TOTAL COMMANDER";
+                else if (strpos($pacote, "solidexplorer") !== false) $nomeAmigavel = "SOLID EXPLORER";
+                else if (strpos($pacote, "mixplorer") !== false) $nomeAmigavel = "MIXPLORER";
+                else if (strpos($pacote, "myfiles") !== false) $nomeAmigavel = "SAMSUNG MY FILES";
+                else $nomeAmigavel = $pacote;
+                
+                if ($diferencaHoras < 2) {
+                    echo $bold . $vermelho . "[!] " . strtoupper($nomeAmigavel) . " ACESSADO: " . $dataUltimoAcesso . "\n";
+                    $gerenciadoresAcessados++;
+                } else {
+                    echo $bold . $amarelo . "[*] " . strtoupper($nomeAmigavel) . " - último acesso: " . $dataUltimoAcesso . "\n";
+                }
+            }
+        }
+    }
+}
 
-          // Verificar desinstalações recentes
-          echo "\n" . $bold . $amarelo . "[*] Verificando desinstalações recentes (últimas 2 horas)...\n";
+// Verificar desinstalações recentes
+echo "\n" . $bold . $amarelo . "[*] Verificando desinstalações recentes (últimas 2 horas)...\n";
 
-          // Verificar última desinstalação
-          $comandoUltimaDesinstalacao = 'adb shell "dumpsys package | grep -A2 \'Recently removed packages\' | grep \'Last removal time\'"';
-          $resultadoUltimaDesinstalacao = trim(shell_exec($comandoUltimaDesinstalacao));
-          $desinstalacoesRecentes = false;
+// Verificar última desinstalação
+$comandoUltimaDesinstalacao = 'adb shell "dumpsys package | grep -A2 \'Recently removed packages\' | grep \'Last removal time\'"';
+$resultadoUltimaDesinstalacao = shell_exec($comandoUltimaDesinstalacao);
+$resultadoUltimaDesinstalacao = is_null($resultadoUltimaDesinstalacao) ? "" : trim($resultadoUltimaDesinstalacao);
+$desinstalacoesRecentes = false;
 
-          if (!empty($resultadoUltimaDesinstalacao)) {
-              preg_match('/Last removal time: (\d+)/', $resultadoUltimaDesinstalacao, $matches);
-              
-              if (!empty($matches[1])) {
-                  $timestampDesinstalacao = intval($matches[1]);
-                  $dataFormatada = date('d-m-Y H:i:s', $timestampDesinstalacao / 1000);
-                  $tempoAtual = time();
-                  $tempoLimite = $tempoAtual - (2 * 3600); // 2 horas atrás
-                  
-                  echo $bold . $amarelo . "[*] ÚLTIMA DESINSTALAÇÃO REALIZADA: " . $dataFormatada . "\n";
-                  
-                  if (($timestampDesinstalacao / 1000) > $tempoLimite) {
-                      echo $bold . $vermelho . "[!] DESINSTALAÇÃO RECENTE DETECTADA NAS ÚLTIMAS 2 HORAS!\n";
-                      $desinstalacoesRecentes = true;
-                  }
-              }
-          }
+if (!empty($resultadoUltimaDesinstalacao)) {
+    preg_match('/Last removal time: (\d+)/', $resultadoUltimaDesinstalacao, $matches);
+    
+    if (!empty($matches[1])) {
+        $timestampDesinstalacao = intval($matches[1]);
+        $dataFormatada = date('d-m-Y H:i:s', $timestampDesinstalacao / 1000);
+        $tempoAtual = time();
+        $tempoLimite = $tempoAtual - (2 * 3600); // 2 horas atrás
+        
+        echo $bold . $amarelo . "[*] ÚLTIMA DESINSTALAÇÃO REALIZADA: " . $dataFormatada . "\n";
+        
+        if (($timestampDesinstalacao / 1000) > $tempoLimite) {
+            echo $bold . $vermelho . "[!] DESINSTALAÇÃO RECENTE DETECTADA NAS ÚLTIMAS 2 HORAS!\n";
+            $desinstalacoesRecentes = true;
+        }
+    }
+}
 
-          // Verificar pacotes removidos recentemente
-          $comandoPacotesRemovidos = 'adb shell "dumpsys package | grep -A10 \'Recently removed packages\'"';
-          $resultadoPacotesRemovidos = trim(shell_exec($comandoPacotesRemovidos));
+// Verificar pacotes removidos recentemente
+$comandoPacotesRemovidos = 'adb shell "dumpsys package | grep -A10 \'Recently removed packages\'"';
+$resultadoPacotesRemovidos = shell_exec($comandoPacotesRemovidos);
+$resultadoPacotesRemovidos = is_null($resultadoPacotesRemovidos) ? "" : trim($resultadoPacotesRemovidos);
 
-          if (!empty($resultadoPacotesRemovidos) && strpos($resultadoPacotesRemovidos, "Empty") === false) {
-              $linhas = explode("\n", $resultadoPacotesRemovidos);
-              $pacotesEncontrados = false;
-              
-              foreach ($linhas as $linha) {
-                  if (strpos($linha, "Recently removed packages:") !== false && strpos($linha, "Empty") === false) {
-                      $pacotes = str_replace("Recently removed packages:", "", $linha);
-                      $pacotes = trim($pacotes);
-                      
-                      if (!empty($pacotes)) {
-                          echo $bold . $vermelho . "[!] APPS DESINSTALADOS RECENTEMENTE: " . $pacotes . "\n";
-                          $pacotesEncontrados = true;
-                          $desinstalacoesRecentes = true;
-                      }
-                  }
-              }
-              
-              if (!$pacotesEncontrados) {
-                  echo $bold . $fverde . "[i] Nenhum pacote removido recentemente.\n";
-              }
-          }
+if (!empty($resultadoPacotesRemovidos) && strpos($resultadoPacotesRemovidos, "Empty") === false) {
+    $linhas = explode("\n", $resultadoPacotesRemovidos);
+    $pacotesEncontrados = false;
+    
+    foreach ($linhas as $linha) {
+        if (strpos($linha, "Recently removed packages:") !== false && strpos($linha, "Empty") === false) {
+            $pacotes = str_replace("Recently removed packages:", "", $linha);
+            $pacotes = trim($pacotes);
+            
+            if (!empty($pacotes)) {
+                echo $bold . $vermelho . "[!] APPS DESINSTALADOS RECENTEMENTE: " . $pacotes . "\n";
+                $pacotesEncontrados = true;
+                $desinstalacoesRecentes = true;
+            }
+        }
+    }
+    
+    if (!$pacotesEncontrados) {
+        echo $bold . $fverde . "[i] Nenhum pacote removido recentemente.\n";
+    }
+}
 
-          // Resumo
-          echo "\n" . $bold . $branco . "[+] RESUMO DA VERIFICAÇÃO:\n";
+// Resumo
+echo "\n" . $bold . $branco . "[+] RESUMO DA VERIFICAÇÃO:\n";
 
-          if ($gerenciadoresAcessados > 0) {
-              echo $bold . $vermelho . "[!] GERENCIADORES DE ARQUIVOS ACESSADOS NAS ÚLTIMAS 2 HORAS\n";
-              echo $bold . $branco . "[#] CASO TENHA SIDO ACESSADO DURANTE OU APÓS A PARTIDA, APLIQUE O W.O!\n";
-          } else {
-              echo $bold . $fverde . "[i] Nenhum gerenciador de arquivos acessado nas últimas 2 horas.\n";
-          }
+if ($gerenciadoresAcessados > 0) {
+    echo $bold . $vermelho . "[!] GERENCIADORES DE ARQUIVOS ACESSADOS NAS ÚLTIMAS 2 HORAS\n";
+    echo $bold . $branco . "[#] CASO TENHA SIDO ACESSADO DURANTE OU APÓS A PARTIDA, APLIQUE O W.O!\n";
+} else {
+    echo $bold . $fverde . "[i] Nenhum gerenciador de arquivos acessado nas últimas 2 horas.\n";
+}
 
-          if ($desinstalacoesRecentes) {
-              echo $bold . $vermelho . "[!] DESINSTALAÇÕES RECENTES DETECTADAS NAS ÚLTIMAS 2 HORAS\n";
-              echo $bold . $branco . "[#] CASO TENHA SIDO DESINSTALADO DURANTE OU APÓS A PARTIDA, APLIQUE O W.O!\n";
-          } else {
-              echo $bold . $fverde . "[i] Nenhuma desinstalação recente nas últimas 2 horas.\n";
-          }
+if ($desinstalacoesRecentes) {
+    echo $bold . $vermelho . "[!] DESINSTALAÇÕES RECENTES DETECTADAS NAS ÚLTIMAS 2 HORAS\n";
+    echo $bold . $branco . "[#] CASO TENHA SIDO DESINSTALADO DURANTE OU APÓS A PARTIDA, APLIQUE O W.O!\n";
+} else {
+    echo $bold . $fverde . "[i] Nenhuma desinstalação recente nas últimas 2 horas.\n";
+}
 
-          echo "\n";
-          /* FIM DO NOVO CÓDIGO DE VERIFICAÇÃO DE DESINSTALAÇÕES */
+echo "\n";
 
 
 
